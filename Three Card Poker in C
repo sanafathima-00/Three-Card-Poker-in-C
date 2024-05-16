@@ -1,0 +1,176 @@
+#include <stdio.h> 
+#include <stdlib.h> 
+#include <string.h> #include<time.h>
+
+struct Card
+{
+ int rank; char suit;
+ struct Card *next;
+};
+typedef struct Card *CARDS;
+
+struct Player
+{
+ char name[20]; 
+ struct Card *hand; 
+ struct Player *next;
+};
+typedef struct Player *PLAYERS;
+ 
+CARDS createCard(int rank, char suit)
+{
+ CARDS newCard;
+ newCard = (CARDS)malloc(sizeof(struct Card)); 
+ if (newCard == NULL)
+ {
+  printf("Insufficient Memory\n"); 
+  exit(0);
+ }
+ char rankSymbol;
+ switch(rank)
+ {
+  case 11: rankSymbol = 'J';
+  break;
+  case 12: rankSymbol = 'Q'; 
+  break;
+  case 13: rankSymbol = 'K'; 
+  break;
+  case 14: rankSymbol = 'A';
+  break;
+  default: rankSymbol = rank + '0';
+ }
+ newCard->rank = rank; 
+ newCard->suit = suit; 
+ newCard->next = NULL; 
+ return newCard;
+}
+
+PLAYERS createPlayer(char name[20])
+{
+ PLAYERS newPlayer;
+ newPlayer = (PLAYERS)malloc(sizeof(struct Player)); 
+ if (newPlayer == NULL)
+ {
+  printf("Insufficient Memory\n"); 
+  exit(0);
+ }
+ strcpy(newPlayer->name, name); 
+ newPlayer->hand = NULL;
+ newPlayer->next = NULL; 
+ return newPlayer;
+}
+
+void displayHand(PLAYERS player)
+{
+ printf("\nPlayer %s's hand:\n", player->name); 
+ CARDS currentCard = player->hand;
+ int count = 1;
+ while (currentCard != NULL)
+ {
+  printf("Card %d: ", count);
+  if(currentCard->rank >= 11 && currentCard->rank <= 14) 
+  { 
+   switch(currentCard->rank) 
+   {
+    case 11: printf("J"); 
+    break;
+    case 12: printf("Q"); 
+    break;
+    case 13: printf("K");
+    break;
+    case 14: printf("A");
+    break;
+   }
+  } 
+  else 
+  {
+    printf("%d", currentCard->rank);
+  }
+  printf(" %c\n", currentCard->suit); 
+  currentCard = currentCard->next;
+  count++;
+ }
+}
+
+PLAYERS decideWinner(PLAYERS head)
+{
+ PLAYERS winner = head;
+ PLAYERS currentPlayer = head->next; 
+ while (currentPlayer != NULL) 
+ {
+  CARDS currentCard = currentPlayer->hand; 
+  CARDS winnerCard = winner->hand;
+  while (currentCard != NULL && winnerCard != NULL) 
+  { 
+   if (currentCard->rank > winnerCard->rank) 
+   {
+    winner = currentPlayer; 
+    break;
+   } 
+   else if (currentCard->rank < winnerCard->rank) 
+   { 
+    break;
+   } 
+   else 
+   {
+    currentCard = currentCard->next;
+    winnerCard = winnerCard->next;
+   }
+  }
+  currentPlayer = currentPlayer->next;
+ }
+ return winner;
+}
+
+void playGame(int numPlayers)
+{
+ PLAYERS head = NULL;
+ for (int i = 0; i < numPlayers; i++)
+ {
+  char name[20];
+  printf("Enter name for player %d: ", i + 1); scanf("%s", name);
+  PLAYERS newPlayer = createPlayer(name);
+  for (int j = 0; j < 3; j++)
+  {
+   int rank = (rand() % 13) + 2; 
+   char suit = "CDHS"[rand() % 4];
+   CARDS newCard = createCard(rank, suit); 
+   newCard->next = newPlayer->hand;
+   newPlayer->hand = newCard;
+  }
+  newPlayer->next = head; head = newPlayer;
+ }
+ PLAYERS currentPlayer = head; 
+ while (currentPlayer != NULL) 
+ { 
+  displayHand(currentPlayer);
+  currentPlayer = currentPlayer->next;
+ }
+ PLAYERS winner = decideWinner(head); 
+ printf("\nWinner is: %s\n", winner->name); 
+ while (head != NULL) 
+ {
+  PLAYERS temp = head; 
+  head = head->next;
+  CARDS currentCard = temp->hand; 
+  while (currentCard != NULL) 
+  {
+   CARDS tempCard = currentCard; 
+   currentCard = currentCard->next; 
+   free(tempCard);
+  }
+  free(temp);
+ }
+}
+
+int main()
+{
+ int numPlayers;
+ printf("Enter the number of players (up to 5): "); 
+ scanf("%d", &numPlayers);
+ if (numPlayers < 1 || numPlayers > 5)
+ {
+  printf("Please enter a number between 1 and 5.\n"); return 1;
+ }
+ srand(time(NULL)); playGame(numPlayers); return 0;
+}
